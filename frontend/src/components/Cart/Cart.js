@@ -104,9 +104,11 @@ const Cart = () => {
                     type="number"
                     min={1}
                     value={item.quantity}
-                    onChange={(e) =>
-                      handleQuantityChange(item, Number(e.target.value))
-                    }
+                    onChange={(e) => {
+                      let value = Number(e.target.value);
+                      if (!value || value < 1) value = 1;
+                      handleQuantityChange(item, value);
+                    }}
                     style={{ width: 50, marginLeft: 8, marginRight: 8 }}
                   />
                   = ${(getItemPrice(item) * item.quantity).toFixed(2)}

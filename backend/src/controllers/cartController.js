@@ -41,6 +41,10 @@ exports.addToCart = async (req, res) => {
       cart.items.push({ type, product, bundle, quantity: quantity || 1 });
     }
     await cart.save();
+    // Re-fetch and populate
+    cart = await Cart.findOne({ user: req.user._id })
+      .populate("items.product")
+      .populate("items.bundle");
     res.json(cart);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -66,7 +70,11 @@ exports.updateCartItem = async (req, res) => {
       return res.status(404).json({ message: "Item not found in cart." });
     cart.items[idx].quantity = quantity;
     await cart.save();
-    res.json(cart);
+    // Re-fetch and populate
+    const populatedCart = await Cart.findOne({ user: req.user._id })
+      .populate("items.product")
+      .populate("items.bundle");
+    res.json(populatedCart);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -90,7 +98,11 @@ exports.removeFromCart = async (req, res) => {
         )
     );
     await cart.save();
-    res.json(cart);
+    // Re-fetch and populate
+    const populatedCart = await Cart.findOne({ user: req.user._id })
+      .populate("items.product")
+      .populate("items.bundle");
+    res.json(populatedCart);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -103,7 +115,11 @@ exports.clearCart = async (req, res) => {
     if (!cart) return res.status(404).json({ message: "Cart not found." });
     cart.items = [];
     await cart.save();
-    res.json(cart);
+    // Re-fetch and populate
+    const populatedCart = await Cart.findOne({ user: req.user._id })
+      .populate("items.product")
+      .populate("items.bundle");
+    res.json(populatedCart);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

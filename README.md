@@ -56,6 +56,8 @@ PORT=5000
 REACT_APP_API_URL=http://localhost:5000
 ```
 
+USE EMAIL - jenifer@example.com, PASSWORD - yourpassword for authentication as seller
+
 ### 3. Install Dependencies
 
 #### Backend
