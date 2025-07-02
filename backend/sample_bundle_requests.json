@@ -1,0 +1,15 @@
+{
+  "sampleProductIds": ["64f1a2b3c4d5e6f7890a1234", "64f1a2b3c4d5e6f7890a5678"],
+  "sampleUserId": "64f1a2b3c4d5e6f7890a9999",
+  "POST /bundles": {
+    "name": "Summer Essentials Bundle",
+    "products": ["64f1a2b3c4d5e6f7890a1234", "64f1a2b3c4d5e6f7890a5678"]
+  },
+  "PATCH /bundles/:id": {
+    "name": "Updated Bundle Name",
+    "products": ["64f1a2b3c4d5e6f7890a1234", "64f1a2b3c4d5e6f7890a5678"]
+  },
+  "GET /bundles/:id/checkDiscount": {
+    "id": "64f1a2b3c4d5e6f7890abundle"
+  }
+}
