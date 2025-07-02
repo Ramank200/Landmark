@@ -1,0 +1,25 @@
+.footer {
+  background: #222;
+  color: #fff;
+  text-align: center;
+  padding: 1.5rem 0 1rem 0;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  position: relative;
+  bottom: 0;
+  width: 100%;
+
+  a {
+    color: #fff;
+    text-decoration: underline;
+    margin-left: 0.5rem;
+    &:hover {
+      color: #ffb347;
+    }
+  }
+
+  @media (max-width: 600px) {
+    font-size: 0.95rem;
+    padding: 1rem 0 0.7rem 0;
+  }
+} 

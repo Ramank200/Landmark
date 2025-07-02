@@ -1,0 +1,33 @@
+.navbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  background: #222;
+  padding: 1rem 0;
+  
+  a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background 0.2s, color 0.2s;
+
+    &:hover,
+    &.active {
+      background: #fff;
+      color: #222;
+    }
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    gap: 1rem;
+    a {
+      font-size: 1rem;
+      padding: 0.5rem 0.7rem;
+    }
+  }
+} 
