@@ -1,35 +1,44 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { authFetch } from "../../utils/authFetch";
+
+const API_URL = process.env.REACT_APP_API_URL;
 
 // Fetch bundles for the logged-in seller
 export const fetchSellerBundles = createAsyncThunk(
   "bundles/fetchSellerBundles",
-  async (_, { getState }) => {
+  async ({ page = 1, limit = 10 } = {}, { getState, dispatch }) => {
     const state = getState();
     const token = state.user.token;
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const response = await fetch("http://localhost:5000/bundles?seller=me", {
-      headers,
-    });
+    const response = await authFetch(
+      `${API_URL}/bundles?seller=me&page=${page}&limit=${limit}`,
+      { headers },
+      dispatch
+    );
     const data = await response.json();
-    return data.bundles;
+    return data;
   }
 );
 
 // Create a new bundle
 export const createBundle = createAsyncThunk(
   "bundles/createBundle",
-  async (bundle, { getState, rejectWithValue }) => {
+  async (bundle, { getState, dispatch, rejectWithValue }) => {
     const state = getState();
     const token = state.user.token;
     try {
-      const response = await fetch("http://localhost:5000/bundles", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      const response = await authFetch(
+        `${API_URL}/bundles`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(bundle),
         },
-        body: JSON.stringify(bundle),
-      });
+        dispatch
+      );
       if (!response.ok) {
         const error = await response.json();
         return rejectWithValue(error.message || "Create failed");
@@ -44,18 +53,22 @@ export const createBundle = createAsyncThunk(
 // Update a bundle
 export const updateBundle = createAsyncThunk(
   "bundles/updateBundle",
-  async ({ id, updates }, { getState, rejectWithValue }) => {
+  async ({ id, updates }, { getState, dispatch, rejectWithValue }) => {
     const state = getState();
     const token = state.user.token;
     try {
-      const response = await fetch(`http://localhost:5000/bundles/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      const response = await authFetch(
+        `${API_URL}/bundles/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(updates),
         },
-        body: JSON.stringify(updates),
-      });
+        dispatch
+      );
       if (!response.ok) {
         const error = await response.json();
         return rejectWithValue(error.message || "Update failed");
@@ -70,14 +83,18 @@ export const updateBundle = createAsyncThunk(
 // Delete a bundle
 export const deleteBundle = createAsyncThunk(
   "bundles/deleteBundle",
-  async (id, { getState, rejectWithValue }) => {
+  async (id, { getState, dispatch, rejectWithValue }) => {
     const state = getState();
     const token = state.user.token;
     try {
-      const response = await fetch(`http://localhost:5000/bundles/${id}`, {
-        method: "DELETE",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await authFetch(
+        `${API_URL}/bundles/${id}`,
+        {
+          method: "DELETE",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        },
+        dispatch
+      );
       if (!response.ok) {
         const error = await response.json();
         return rejectWithValue(error.message || "Delete failed");
@@ -91,7 +108,14 @@ export const deleteBundle = createAsyncThunk(
 
 const bundlesSlice = createSlice({
   name: "bundles",
-  initialState: { items: [], status: "idle", error: null },
+  initialState: {
+    items: [],
+    status: "idle",
+    error: null,
+    page: 1,
+    totalPages: 1,
+    totalBundles: 0,
+  },
   reducers: {},
   extraReducers: (builder) => {
     builder
@@ -100,7 +124,10 @@ const bundlesSlice = createSlice({
       })
       .addCase(fetchSellerBundles.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.items = action.payload;
+        state.items = action.payload.bundles;
+        state.page = action.payload.page;
+        state.totalPages = action.payload.totalPages;
+        state.totalBundles = action.payload.totalBundles;
       })
       .addCase(fetchSellerBundles.rejected, (state, action) => {
         state.status = "failed";

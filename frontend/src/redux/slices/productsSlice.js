@@ -1,49 +1,60 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { authFetch } from "../../utils/authFetch";
+
+const API_URL = process.env.REACT_APP_API_URL;
 
 // Fetch all products (public)
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
-  async (_, { getState }) => {
+  async ({ page = 1, limit = 10 } = {}, { getState }) => {
     const state = getState();
     const token = state.user.token;
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const response = await fetch("http://localhost:5000/products", { headers });
+    const response = await fetch(
+      `${API_URL}/products?page=${page}&limit=${limit}`,
+      { headers }
+    );
     const data = await response.json();
-    console.log({ data });
-    return data.products;
+    return data;
   }
 );
 
 // Fetch products for the logged-in seller
 export const fetchSellerProducts = createAsyncThunk(
   "products/fetchSellerProducts",
-  async (_, { getState }) => {
+  async ({ page = 1, limit = 10 } = {}, { getState, dispatch }) => {
     const state = getState();
     const token = state.user.token;
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const response = await fetch("http://localhost:5000/products?seller=me", {
-      headers,
-    });
+    const response = await authFetch(
+      `${API_URL}/products?seller=me&page=${page}&limit=${limit}`,
+      { headers },
+      dispatch
+    );
     const data = await response.json();
-    return data.products;
+    return data;
   }
 );
 
 // Create a new product
 export const createProduct = createAsyncThunk(
   "products/createProduct",
-  async (product, { getState, rejectWithValue }) => {
+  async (product, { getState, dispatch, rejectWithValue }) => {
     const state = getState();
     const token = state.user.token;
     try {
-      const response = await fetch("http://localhost:5000/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      const response = await authFetch(
+        `${API_URL}/products`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(product),
         },
-        body: JSON.stringify(product),
-      });
+        dispatch
+      );
       if (!response.ok) {
         const error = await response.json();
         return rejectWithValue(error.message || "Create failed");
@@ -58,18 +69,22 @@ export const createProduct = createAsyncThunk(
 // Update a product
 export const updateProduct = createAsyncThunk(
   "products/updateProduct",
-  async ({ id, updates }, { getState, rejectWithValue }) => {
+  async ({ id, updates }, { getState, dispatch, rejectWithValue }) => {
     const state = getState();
     const token = state.user.token;
     try {
-      const response = await fetch(`http://localhost:5000/products/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      const response = await authFetch(
+        `${API_URL}/products/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(updates),
         },
-        body: JSON.stringify(updates),
-      });
+        dispatch
+      );
       if (!response.ok) {
         const error = await response.json();
         return rejectWithValue(error.message || "Update failed");
@@ -84,14 +99,18 @@ export const updateProduct = createAsyncThunk(
 // Delete a product
 export const deleteProduct = createAsyncThunk(
   "products/deleteProduct",
-  async (id, { getState, rejectWithValue }) => {
+  async (id, { getState, dispatch, rejectWithValue }) => {
     const state = getState();
     const token = state.user.token;
     try {
-      const response = await fetch(`http://localhost:5000/products/${id}`, {
-        method: "DELETE",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await authFetch(
+        `${API_URL}/products/${id}`,
+        {
+          method: "DELETE",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        },
+        dispatch
+      );
       if (!response.ok) {
         const error = await response.json();
         return rejectWithValue(error.message || "Delete failed");
@@ -105,7 +124,14 @@ export const deleteProduct = createAsyncThunk(
 
 const productsSlice = createSlice({
   name: "products",
-  initialState: { items: [], status: "idle", error: null },
+  initialState: {
+    items: [],
+    status: "idle",
+    error: null,
+    page: 1,
+    totalPages: 1,
+    totalProducts: 0,
+  },
   reducers: {},
   extraReducers: (builder) => {
     builder
@@ -114,14 +140,20 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.items = action.payload;
+        state.items = action.payload.products;
+        state.page = action.payload.page;
+        state.totalPages = action.payload.totalPages;
+        state.totalProducts = action.payload.totalProducts;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message;
       })
       .addCase(fetchSellerProducts.fulfilled, (state, action) => {
-        state.items = action.payload;
+        state.items = action.payload.products;
+        state.page = action.payload.page;
+        state.totalPages = action.payload.totalPages;
+        state.totalProducts = action.payload.totalProducts;
       })
       .addCase(createProduct.fulfilled, (state, action) => {
         state.items.push(action.payload);

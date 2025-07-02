@@ -1,15 +1,22 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { authFetch } from "../../utils/authFetch";
+
+const API_URL = process.env.REACT_APP_API_URL;
 
 // Async thunk for user login
 export const loginUser = createAsyncThunk(
   "user/loginUser",
-  async ({ email, password }, { rejectWithValue }) => {
+  async ({ email, password }, { rejectWithValue, dispatch }) => {
     try {
-      const response = await fetch("http://localhost:5000/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await authFetch(
+        `${API_URL}/users/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        },
+        dispatch
+      );
       if (!response.ok) {
         const error = await response.json();
         return rejectWithValue(error.message || "Login failed");

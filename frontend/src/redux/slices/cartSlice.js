@@ -1,75 +1,94 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { authFetch } from "../../utils/authFetch";
+
+const API_URL = process.env.REACT_APP_API_URL;
 
 export const fetchCart = createAsyncThunk(
   "cart/fetchCart",
-  async (_, { getState }) => {
+  async (_, { getState, dispatch }) => {
     const token = getState().user.token;
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const res = await fetch("http://localhost:5000/cart", { headers });
+    const res = await authFetch(`${API_URL}/cart`, { headers }, dispatch);
     return await res.json();
   }
 );
 
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
-  async (item, { getState }) => {
+  async (item, { getState, dispatch }) => {
     const token = getState().user.token;
     const headers = {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
-    const res = await fetch("http://localhost:5000/cart/add", {
-      method: "POST",
-      headers,
-      body: JSON.stringify(item),
-    });
+    const res = await authFetch(
+      `${API_URL}/cart/add`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(item),
+      },
+      dispatch
+    );
     return await res.json();
   }
 );
 
 export const updateCartItem = createAsyncThunk(
   "cart/updateCartItem",
-  async (item, { getState }) => {
+  async (item, { getState, dispatch }) => {
     const token = getState().user.token;
     const headers = {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
-    const res = await fetch("http://localhost:5000/cart/update", {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify(item),
-    });
+    const res = await authFetch(
+      `${API_URL}/cart/update`,
+      {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify(item),
+      },
+      dispatch
+    );
     return await res.json();
   }
 );
 
 export const removeFromCart = createAsyncThunk(
   "cart/removeFromCart",
-  async (item, { getState }) => {
+  async (item, { getState, dispatch }) => {
     const token = getState().user.token;
     const headers = {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
-    const res = await fetch("http://localhost:5000/cart/remove", {
-      method: "DELETE",
-      headers,
-      body: JSON.stringify(item),
-    });
+    const res = await authFetch(
+      `${API_URL}/cart/remove`,
+      {
+        method: "DELETE",
+        headers,
+        body: JSON.stringify(item),
+      },
+      dispatch
+    );
     return await res.json();
   }
 );
 
 export const clearCart = createAsyncThunk(
   "cart/clearCart",
-  async (_, { getState }) => {
+  async (_, { getState, dispatch }) => {
     const token = getState().user.token;
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const res = await fetch("http://localhost:5000/cart/clear", {
-      method: "POST",
-      headers,
-    });
+    const res = await authFetch(
+      `${API_URL}/cart/clear`,
+      {
+        method: "POST",
+        headers,
+      },
+      dispatch
+    );
     return await res.json();
   }
 );
