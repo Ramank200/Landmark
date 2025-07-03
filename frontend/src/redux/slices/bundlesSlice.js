@@ -3,6 +3,22 @@ import { authFetch } from "../../utils/authFetch";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
+// Fetch all bundles (public)
+export const fetchBundles = createAsyncThunk(
+  "bundles/fetchBundles",
+  async ({ page = 1, limit = 10 } = {}, { getState }) => {
+    const state = getState();
+    const token = state.user.token;
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const response = await fetch(
+      `${API_URL}/bundles?page=${page}&limit=${limit}`,
+      { headers }
+    );
+    const data = await response.json();
+    return data;
+  }
+);
+
 // Fetch bundles for the logged-in seller
 export const fetchSellerBundles = createAsyncThunk(
   "bundles/fetchSellerBundles",
@@ -119,6 +135,20 @@ const bundlesSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(fetchBundles.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchBundles.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.items = action.payload.bundles;
+        state.page = action.payload.page;
+        state.totalPages = action.payload.totalPages;
+        state.totalBundles = action.payload.totalBundles;
+      })
+      .addCase(fetchBundles.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message;
+      })
       .addCase(fetchSellerBundles.pending, (state) => {
         state.status = "loading";
       })

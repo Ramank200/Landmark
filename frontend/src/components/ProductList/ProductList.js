@@ -7,12 +7,18 @@ import { useNavigate } from "react-router-dom";
 const ProductList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items, status, error } = useSelector((state) => state.products);
+  const { items, status, error, page, totalPages } = useSelector(
+    (state) => state.products
+  );
   // const cartStatus = useSelector((state) => state.cart.status);
 
   useEffect(() => {
-    dispatch(fetchProducts());
+    dispatch(fetchProducts({ page: 1, limit: 10 }));
   }, [dispatch]);
+
+  const handlePageChange = (newPage) => {
+    dispatch(fetchProducts({ page: newPage, limit: 10 }));
+  };
 
   if (status === "loading") return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -47,6 +53,55 @@ const ProductList = () => {
           </li>
         ))}
       </ul>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 10,
+            marginTop: 30,
+            alignItems: "center",
+          }}
+        >
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page <= 1}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 6,
+              background: page <= 1 ? "#ccc" : "#1976d2",
+              color: "#fff",
+              border: "none",
+              fontWeight: 600,
+              cursor: page <= 1 ? "not-allowed" : "pointer",
+            }}
+          >
+            Previous
+          </button>
+
+          <span style={{ fontWeight: 600 }}>
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page >= totalPages}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 6,
+              background: page >= totalPages ? "#ccc" : "#1976d2",
+              color: "#fff",
+              border: "none",
+              fontWeight: 600,
+              cursor: page >= totalPages ? "not-allowed" : "pointer",
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

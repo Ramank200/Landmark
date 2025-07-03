@@ -62,8 +62,8 @@ exports.getAllBundles = async (req, res) => {
     const bundles = await Bundle.find(filter)
       .populate("products")
       .populate("seller", "name email")
-      // .skip(skip)
-      // .limit(limit)
+      .skip(skip)
+      .limit(limit)
       .exec();
     const total = await Bundle.countDocuments(filter);
     res.status(200).json({
@@ -99,6 +99,7 @@ exports.updateBundle = async (req, res) => {
       bundle.discountedPrice = discountedPrice;
     }
     await bundle.save();
+    await bundle.populate("products");
     res.status(200).json(bundle);
   } catch (err) {
     res.status(400).json({ message: err.message });

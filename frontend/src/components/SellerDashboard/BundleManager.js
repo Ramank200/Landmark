@@ -17,6 +17,8 @@ const BundleManager = () => {
     items: bundles,
     status,
     error,
+    page,
+    totalPages,
   } = useSelector((state) => state.bundles);
   const { items: products } = useSelector((state) => state.products);
   const [form, setForm] = useState(initialForm);
@@ -24,9 +26,13 @@ const BundleManager = () => {
   const [formError, setFormError] = useState("");
 
   useEffect(() => {
-    dispatch(fetchSellerBundles());
-    dispatch(fetchSellerProducts());
+    dispatch(fetchSellerBundles({ page: 1, limit: 10 }));
+    dispatch(fetchSellerProducts({ page: 1, limit: 50 }));
   }, [dispatch]);
+
+  const handlePageChange = (newPage) => {
+    dispatch(fetchSellerBundles({ page: newPage, limit: 10 }));
+  };
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -148,6 +154,55 @@ const BundleManager = () => {
           </li>
         ))}
       </ul>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 10,
+            marginTop: 30,
+            alignItems: "center",
+          }}
+        >
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page <= 1}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 6,
+              background: page <= 1 ? "#ccc" : "#1976d2",
+              color: "#fff",
+              border: "none",
+              fontWeight: 600,
+              cursor: page <= 1 ? "not-allowed" : "pointer",
+            }}
+          >
+            Previous
+          </button>
+
+          <span style={{ fontWeight: 600 }}>
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page >= totalPages}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 6,
+              background: page >= totalPages ? "#ccc" : "#1976d2",
+              color: "#fff",
+              border: "none",
+              fontWeight: 600,
+              cursor: page >= totalPages ? "not-allowed" : "pointer",
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

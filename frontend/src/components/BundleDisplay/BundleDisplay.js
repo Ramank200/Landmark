@@ -1,38 +1,45 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts } from "../../redux/slices/productsSlice";
+import {
+  fetchBundles,
+  fetchSellerBundles,
+} from "../../redux/slices/bundlesSlice";
 import { addToCart } from "../../redux/slices/cartSlice";
 
 const BundleDisplay = () => {
-  const [bundles, setBundles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const dispatch = useDispatch();
   const { items: products } = useSelector((state) => state.products);
+  const {
+    items: bundles,
+    status,
+    error,
+    page,
+    totalPages,
+  } = useSelector((state) => state.bundles);
   const cartStatus = useSelector((state) => state.cart.status);
   const { user } = useSelector((state) => state.user);
 
   useEffect(() => {
     dispatch(fetchProducts());
-    const fetchBundles = async () => {
-      setLoading(true);
-      try {
-        let url = "http://localhost:5000/bundles";
-        // If you want sellers to see only their bundles in this view, uncomment below:
-        // if (user && user.isSeller) url += "?seller=me";
-        const res = await fetch(url);
-        const data = await res.json();
-        setBundles(data.bundles || []);
-        setError(null);
-      } catch (err) {
-        setError("Failed to fetch bundles");
-      }
-      setLoading(false);
-    };
-    fetchBundles();
+    // If user is a seller, fetch only their bundles, otherwise fetch all bundles
+    if (user && user.isSeller) {
+      dispatch(fetchSellerBundles({ page: 1, limit: 6 }));
+    } else {
+      dispatch(fetchBundles({ page: 1, limit: 6 }));
+    }
   }, [dispatch, user]);
 
-  if (loading) return <div>Loading bundles...</div>;
+  const handlePageChange = (newPage) => {
+    // If user is a seller, fetch only their bundles, otherwise fetch all bundles
+    if (user && user.isSeller) {
+      dispatch(fetchSellerBundles({ page: newPage, limit: 6 }));
+    } else {
+      dispatch(fetchBundles({ page: newPage, limit: 6 }));
+    }
+  };
+
+  if (status === "loading") return <div>Loading bundles...</div>;
   if (error) return <div style={{ color: "red" }}>{error}</div>;
 
   const handleAddToCart = (bundleId) => {
@@ -42,7 +49,7 @@ const BundleDisplay = () => {
   return (
     <div style={{ maxWidth: 900, margin: "2rem auto" }}>
       <h2 style={{ textAlign: "center", marginBottom: 24 }}>
-        Available Bundles
+        {user && user.isSeller ? "My Bundles" : "Available Bundles"}
       </h2>
       <div
         style={{
@@ -95,6 +102,55 @@ const BundleDisplay = () => {
           </div>
         ))}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 10,
+            marginTop: 30,
+            alignItems: "center",
+          }}
+        >
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page <= 1}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 6,
+              background: page <= 1 ? "#ccc" : "#1976d2",
+              color: "#fff",
+              border: "none",
+              fontWeight: 600,
+              cursor: page <= 1 ? "not-allowed" : "pointer",
+            }}
+          >
+            Previous
+          </button>
+
+          <span style={{ fontWeight: 600 }}>
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page >= totalPages}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 6,
+              background: page >= totalPages ? "#ccc" : "#1976d2",
+              color: "#fff",
+              border: "none",
+              fontWeight: 600,
+              cursor: page >= totalPages ? "not-allowed" : "pointer",
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };
